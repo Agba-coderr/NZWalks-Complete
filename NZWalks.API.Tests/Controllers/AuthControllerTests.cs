@@ -2,9 +2,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NZWalks.API.Controllers;
-using NZWalks.API.Models.Common;
-using NZWalks.API.Models.DTO;
-using NZWalks.API.Services;
+using NZWalks.Application.Common;
+using NZWalks.Application.DTOs;
+using NZWalks.Application.Interfaces.Services;
 using Xunit;
 
 namespace NZWalks.API.Tests.Controllers

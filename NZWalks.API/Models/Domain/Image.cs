@@ -1,13 +1,8 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace NZWalks.API.Models.Domain
 {
     public class Image : BaseEntity
     {
         // Inherits Id from BaseEntity
-
-        [NotMapped]
-        public required IFormFile File { get; set; }
 
         public string? FileDescription { get; set; }
 

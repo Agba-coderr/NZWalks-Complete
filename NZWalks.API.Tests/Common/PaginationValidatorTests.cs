@@ -1,5 +1,5 @@
 using FluentAssertions;
-using NZWalks.API.Models.Common;
+using NZWalks.Application.Common;
 using Xunit;
 
 namespace NZWalks.API.Tests.Common

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "NZWalks.APIs": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:51605;http://localhost:51606"
+    }
+  }
+}

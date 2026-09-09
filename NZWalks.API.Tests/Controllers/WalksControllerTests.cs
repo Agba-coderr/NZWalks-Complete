@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NZWalks.API.Controllers;
-using NZWalks.API.Models.Common;
-using NZWalks.API.Models.DTO;
-using NZWalks.API.Models.Enums;
-using NZWalks.API.Services;
+using NZWalks.Application.Common;
+using NZWalks.Application.DTOs;
+using NZWalks.Domain.Enums;
+using NZWalks.Application.Interfaces.Services;
 using System.Security.Claims;
 using Xunit;
 

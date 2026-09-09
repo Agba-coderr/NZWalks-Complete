@@ -1,5 +1,12 @@
 <Solution>
-  <Project Path="NZWalks.API.Tests/NZWalks.API.Tests.csproj" />
-  <Project Path="NZWalks.API/NZWalks.API.csproj" />
-  <Project Path="NZWalks.UI/NZWalks.UI.csproj" Id="12ef876b-dd98-48d1-aa62-f1038ff5e558" />
+  <Folder Name="/Src/">
+    <Project Path="NZWalks.APIs/NZWalks.APIs.csproj" Id="f3468645-349c-4d21-8c16-3b2db7e7c583" />
+    <Project Path="NZWalks.Application/NZWalks.Application.csproj" Id="38c1b7cb-0868-4925-ad23-b38ef05f8b3c" />
+    <Project Path="NZWalks.Domain/NZWalks.Domain.csproj" Id="7124fff6-ad4f-43d6-82ad-37475be5d354" />
+    <Project Path="NZWalks.Infrastructure/NZWalks.Infrastructure.csproj" Id="7f6e69b3-0990-4dea-9e57-c04004e8599d" />
+    <Project Path="NZWalks.UI/NZWalks.UI.csproj" Id="12ef876b-dd98-48d1-aa62-f1038ff5e558" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="NZWalks.API.Tests/NZWalks.API.Tests.csproj" />
+  </Folder>
 </Solution>

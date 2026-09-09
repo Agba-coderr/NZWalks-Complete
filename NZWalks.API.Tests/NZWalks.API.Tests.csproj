@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <ProjectReference Include="..\NZWalks.Application\NZWalks.Application.csproj" />
+  <ProjectReference Include="..\NZWalks.Domain\NZWalks.Domain.csproj" />
+  <ProjectReference Include="..\NZWalks.APIs\NZWalks.APIs.csproj" />	  <ProjectReference Include="..\NZWalks.Application\NZWalks.Application.csproj" />
+	  <ProjectReference Include="..\NZWalks.Domain\NZWalks.Domain.csproj" />
+	  	<ProjectReference Include="..\NZWalks.Application\NZWalks.Application.csproj" />
+  <ProjectReference Include="..\NZWalks.Domain\NZWalks.Domain.csproj" />
+   
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="FluentAssertions" Version="8.10.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -19,11 +26,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\NZWalks.APIs\NZWalks.APIs.csproj" />
+    <ProjectReference Include="..\NZWalks.Application\NZWalks.Application.csproj" />
+    <ProjectReference Include="..\NZWalks.Domain\NZWalks.Domain.csproj" />
+    <ProjectReference Include="..\NZWalks.Infrastructure\NZWalks.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NZWalks.API\NZWalks.API.csproj" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\NZWalks.Application\NZWalks.Application.csproj" />
+    <ProjectReference Include="..\NZWalks.Infrastructure\NZWalks.Infrastructure.csproj" />
+	
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+	<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+  </ItemGroup>
+
+
+
+  <ItemGroup>
+    <Folder Include="Images\" />
+  </ItemGroup>
+
+</Project>

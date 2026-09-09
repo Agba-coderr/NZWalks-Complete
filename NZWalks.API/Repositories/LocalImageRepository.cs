@@ -19,7 +19,7 @@ namespace NZWalks.API.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<Image> Upload(Image image)
+        public async Task<Image> Upload(Image image, IFormFile file)
         {
             var localFilePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Images",
                 $"{image.FileName}{image.FileExtension}");
@@ -33,7 +33,7 @@ namespace NZWalks.API.Repositories
 
             // Save image to local path
             using var stream = new FileStream(localFilePath, FileMode.Create);
-            await image.File.CopyToAsync(stream);
+            await file.CopyToAsync(stream);
 
             // Generate scheme-relative / absolute file path URL for serving
             var httpRequest = _httpContextAccessor.HttpContext?.Request;

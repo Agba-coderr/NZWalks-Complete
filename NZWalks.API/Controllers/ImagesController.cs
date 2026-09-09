@@ -31,7 +31,7 @@ namespace NZWalks.API.Controllers
             var imageDomainModel = _mapper.Map<Image>(request);
 
             // 2. Use Repository to save file and persist DB record
-            await _imageRepository.Upload(imageDomainModel);
+            await _imageRepository.Upload(imageDomainModel, request.File);
 
             return Ok(imageDomainModel);
         }

@@ -5,10 +5,12 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NZWalks.API.Data;
-using NZWalks.API.Models.DTO;
-using NZWalks.API.Repositories;
-using NZWalks.API.Services;
+using NZWalks.Infrastructure.Data;
+using NZWalks.Infrastructure.Services;
+using NZWalks.Application.Common;
+using NZWalks.Application.DTOs;
+using NZWalks.Application.Interfaces.Repositories;
+using NZWalks.Application.Interfaces.Services;
 using System.Security.Claims;
 using Xunit;
 

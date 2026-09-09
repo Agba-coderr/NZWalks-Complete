@@ -2,10 +2,10 @@ using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using NZWalks.API.Mappings;
-using NZWalks.API.Models.Domain;
-using NZWalks.API.Models.DTO;
-using NZWalks.API.Models.Enums;
+using NZWalks.Application.Mappings;
+using NZWalks.Domain.Entities;
+using NZWalks.Application.DTOs;
+using NZWalks.Domain.Enums;
 using Xunit;
 
 namespace NZWalks.API.Tests.Mappings
@@ -163,10 +163,12 @@ namespace NZWalks.API.Tests.Mappings
             mockFile.Setup(f => f.FileName).Returns("landscape.PNG");
             mockFile.Setup(f => f.Length).Returns(2048);
 
+            var stream = new MemoryStream(new byte[2048]);
+
             var uploadDto = new ImageUploadRequestDto
             {
-                File = mockFile.Object,
-                FileName = "My Landscape Photo",
+                FileStream = stream,
+                FileName = "My Landscape Photo.PNG",
                 FileDescription = "Description of photo"
             };
 
@@ -175,7 +177,7 @@ namespace NZWalks.API.Tests.Mappings
 
             // Assert
             image.Should().NotBeNull();
-            image.FileName.Should().Be("My Landscape Photo");
+            image.FileName.Should().Be("My Landscape Photo.PNG");
             image.FileDescription.Should().Be("Description of photo");
             image.FileExtension.Should().Be(".PNG");
             image.FileSizeInBytes.Should().Be(2048);
