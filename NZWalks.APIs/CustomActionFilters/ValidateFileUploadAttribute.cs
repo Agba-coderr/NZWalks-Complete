@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using NZWalks.Application.DTOs;
 
-namespace NZWalks.API.CustomActionFilters
+namespace NZWalks.APIs.CustomActionFilters
 {
     public class ValidateFileUploadAttribute : ActionFilterAttribute
     {

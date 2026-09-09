@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using NZWalks.API.CustomActionFilters;
+using NZWalks.APIs.CustomActionFilters;
 using NZWalks.Application.DTOs;
 using NZWalks.Domain.Enums;
 using NZWalks.Application.Common;
 using NZWalks.Application.Interfaces.Services;
 using System.Security.Claims;
 
-namespace NZWalks.API.Controllers
+namespace NZWalks.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

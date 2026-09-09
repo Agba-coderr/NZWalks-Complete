@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using Moq;
-using NZWalks.API.CustomActionFilters;
+using NZWalks.APIs.CustomActionFilters;
 using Xunit;
 
 namespace NZWalks.API.Tests.CustomActionFilters

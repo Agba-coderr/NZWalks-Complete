@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NZWalks.Application.DTOs;
 using NZWalks.Application.Interfaces.Services;
 
-namespace NZWalks.API.Controllers
+namespace NZWalks.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

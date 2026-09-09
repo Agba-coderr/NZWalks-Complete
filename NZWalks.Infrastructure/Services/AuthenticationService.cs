@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NZWalks.Infrastructure.Data;
 using NZWalks.Application.Common;
@@ -19,6 +20,7 @@ namespace NZWalks.Infrastructure.Services
         private readonly NZWalksAuthDbContext _nZWalksAuthDbContext;
         private readonly ILogger<AuthenticationService> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IConfiguration? _configuration;
 
         public AuthenticationService(
             UserManager<IdentityUser> userManager,
@@ -26,7 +28,8 @@ namespace NZWalks.Infrastructure.Services
             IEmailService emailService,
             NZWalksAuthDbContext nZWalksAuthDbContext,
             ILogger<AuthenticationService> logger,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            IConfiguration? configuration = null)
         {
             _userManager = userManager;
             _tokenRepository = tokenRepository;
@@ -34,6 +37,34 @@ namespace NZWalks.Infrastructure.Services
             _nZWalksAuthDbContext = nZWalksAuthDbContext;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
+            _configuration = configuration;
+        }
+
+        private string GetBaseUrl()
+        {
+            // 1. Explicitly configured BaseUrl in appsettings.json
+            var configuredUrl = _configuration?["EmailSettings:BaseUrl"] ?? _configuration?["AppUrl"];
+            if (!string.IsNullOrWhiteSpace(configuredUrl))
+            {
+                return configuredUrl.TrimEnd('/');
+            }
+
+            // 2. Read from active request (handling X-Forwarded headers from ngrok/proxies)
+            var request = _httpContextAccessor.HttpContext?.Request;
+            if (request != null)
+            {
+                var scheme = request.Headers.TryGetValue("X-Forwarded-Proto", out var proto) && !string.IsNullOrWhiteSpace(proto)
+                    ? proto.ToString()
+                    : request.Scheme;
+
+                var host = request.Headers.TryGetValue("X-Forwarded-Host", out var forwardedHost) && !string.IsNullOrWhiteSpace(forwardedHost)
+                    ? forwardedHost.ToString()
+                    : request.Host.ToString();
+
+                return $"{scheme}://{host}";
+            }
+
+            return "https://localhost:7246";
         }
 
         public async Task<Result> RegisterAsync(RegisterRequestDto registerRequestDto)
@@ -87,8 +118,7 @@ namespace NZWalks.Infrastructure.Services
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(identityUser);
                 var encodedToken = WebUtility.UrlEncode(token);
 
-                var request = _httpContextAccessor.HttpContext?.Request;
-                var baseUrl = $"{request?.Scheme}://{request?.Host}";
+                var baseUrl = GetBaseUrl();
                 var confirmationLink = $"{baseUrl}/api/Auth/VerifyEmail?userId={identityUser.Id}&token={encodedToken}";
 
                 // 5. Send Verification Email
@@ -229,8 +259,7 @@ namespace NZWalks.Infrastructure.Services
                 // 3. Generate a new verification token & build the link
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var encodedToken = WebUtility.UrlEncode(token);
-                var request = _httpContextAccessor.HttpContext?.Request;
-                var baseUrl = $"{request?.Scheme}://{request?.Host}";
+                var baseUrl = GetBaseUrl();
                 var confirmationLink = $"{baseUrl}/api/Auth/VerifyEmail?userId={user.Id}&token={encodedToken}";
                 var emailBody = $@"
                     <p>Hi <b>{user.UserName}</b>,</p>

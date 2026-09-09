@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using NZWalks.API.Controllers;
+using NZWalks.APIs.Controllers;
 using NZWalks.Application.Common;
 using NZWalks.Application.DTOs;
 using NZWalks.Application.Interfaces.Services;
