@@ -1,84 +1,57 @@
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using NZWalks.API.Tests.Common;
 using NZWalks.APIs.Controllers;
 using NZWalks.Application.Common;
 using NZWalks.Application.DTOs;
+using NZWalks.Application.Walks.Commands;
+using NZWalks.Application.Walks.Queries;
 using NZWalks.Domain.Enums;
-using NZWalks.Application.Interfaces.Services;
-using System.Security.Claims;
 using Xunit;
 
 namespace NZWalks.API.Tests.Controllers
 {
     public class WalksControllerTests
     {
-        private readonly Mock<IWalkService> _mockWalkService;
+        private readonly Mock<ISender> _mockSender;
         private readonly WalksController _controller;
 
         public WalksControllerTests()
         {
-            _mockWalkService = new Mock<IWalkService>();
-            _controller = new WalksController(_mockWalkService.Object);
-        }
-
-        private void SetControllerUser(string? userId, string[]? roles = null)
-        {
-            var claims = new List<Claim>();
-            if (userId != null)
-            {
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, userId));
-            }
-            if (roles != null)
-            {
-                foreach (var role in roles)
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, role));
-                }
-            }
-
-            var identity = new ClaimsIdentity(claims, userId != null ? "TestAuth" : null);
-            var claimsPrincipal = new ClaimsPrincipal(identity);
-
-            _controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
-            };
+            _mockSender = new Mock<ISender>();
+            _controller = new WalksController(_mockSender.Object);
         }
 
         [Fact]
-        public async Task GetAllWalks_CallsServiceAndReturnsStatusCode()
+        public async Task GetAllWalks_SendsQueryAndReturnsStatusCode()
         {
             // Arrange
+            var query = new GetAllWalksQuery(FilterOn: null, FilterQuery: null, PageNumber: 1, PageSize: 10);
             var expectedResponse = Result.Success(new List<WalkDto>(), "Success", 200);
-            _mockWalkService.Setup(s => s.GetAllWalksAsync(null, null, 1, 10))
+
+            _mockSender.Setup(s => s.Send(query, default))
                 .ReturnsAsync(expectedResponse);
 
             // Act
-            var actionResult = await _controller.GetAllWalks(null, null, 1, 10);
+            var actionResult = await _controller.GetAllWalks(query);
 
             // Assert
             var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(200);
             objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(query, default), Times.Once);
         }
 
         [Fact]
-        public async Task GetWalkById_CallsServiceAndReturnsStatusCode()
+        public async Task GetWalkById_SendsQueryAndReturnsStatusCode()
         {
             // Arrange
             var walkId = Guid.NewGuid();
-            var expectedResponse = Result.Success(new WalkDto
-            {
-                Id = walkId,
-                Name = "Walk 1",
-                Description = "Desc",
-                DifficultyType = DifficultyType.Easy,
-                Region = new RegionDto { Code = "AKL", Name = "Auckland" }
-            }, "Found", 200);
+            var expectedResponse = Result.Success(TestDataHelper.CreateWalkDto(walkId, name: "Walk 1"), "Found", 200);
 
-            _mockWalkService.Setup(s => s.GetWalkByIdAsync(walkId))
+            _mockSender.Setup(s => s.Send(It.Is<GetWalkByIdQuery>(q => q.Id == walkId), default))
                 .ReturnsAsync(expectedResponse);
 
             // Act
@@ -88,129 +61,138 @@ namespace NZWalks.API.Tests.Controllers
             var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(200);
             objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(It.Is<GetWalkByIdQuery>(q => q.Id == walkId), default), Times.Once);
         }
 
         [Fact]
-        public async Task GetWalksByUserId_WhenUnauthenticated_ReturnsUnauthorized()
+        public async Task GetWalksByUserId_SendsQueryAndReturnsStatusCode()
         {
             // Arrange
-            SetControllerUser(userId: null);
-
-            // Act
-            var actionResult = await _controller.GetWalksByUserId(1, 10);
-
-            // Assert
-            var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
-            objectResult.StatusCode.Should().Be(401);
-        }
-
-        [Fact]
-        public async Task GetWalksByUserId_WhenAuthenticated_CallsService()
-        {
-            // Arrange
-            var userId = "user-123";
-            SetControllerUser(userId);
+            var query = new GetWalksByUserIdQuery(PageNumber: 1, PageSize: 10);
             var expectedResponse = Result.Success(new List<WalkDto>(), "Success", 200);
 
-            _mockWalkService.Setup(s => s.GetWalksByUserIdAsync(userId, 1, 10))
+            _mockSender.Setup(s => s.Send(query, default))
                 .ReturnsAsync(expectedResponse);
 
             // Act
-            var actionResult = await _controller.GetWalksByUserId(1, 10);
+            var actionResult = await _controller.GetWalksByUserId(query);
 
             // Assert
             var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(200);
             objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(query, default), Times.Once);
         }
 
         [Fact]
-        public async Task CreateWalk_WhenUnauthenticated_ReturnsUnauthorized()
+        public async Task GetLongestWalkByUserId_SendsQueryAndReturnsStatusCode()
         {
             // Arrange
-            SetControllerUser(userId: null);
-            var requestDto = new AddWalkRequestDto
-            {
-                Name = "Walk",
-                Description = "Desc",
-                DifficultyType = DifficultyType.Easy,
-                RegionId = Guid.NewGuid()
-            };
+            var expectedResponse = Result.Success(TestDataHelper.CreateWalkDto(name: "Longest Walk"), "Success", 200);
 
-            // Act
-            var actionResult = await _controller.CreateWalk(requestDto);
-
-            // Assert
-            var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
-            objectResult.StatusCode.Should().Be(401);
-        }
-
-        [Fact]
-        public async Task CreateWalk_WhenAuthenticated_CallsServiceWithUserId()
-        {
-            // Arrange
-            var userId = "user-abc";
-            SetControllerUser(userId);
-            var requestDto = new AddWalkRequestDto
-            {
-                Name = "Walk",
-                Description = "Desc",
-                DifficultyType = DifficultyType.Easy,
-                RegionId = Guid.NewGuid()
-            };
-            var expectedResponse = Result.Success(null, "Created", 201);
-
-            _mockWalkService.Setup(s => s.CreateWalkAsync(requestDto, userId))
+            _mockSender.Setup(s => s.Send(It.IsAny<GetLongestWalkByUserIdQuery>(), default))
                 .ReturnsAsync(expectedResponse);
 
             // Act
-            var actionResult = await _controller.CreateWalk(requestDto);
+            var actionResult = await _controller.GetLongestWalkByUserId();
+
+            // Assert
+            var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
+            objectResult.StatusCode.Should().Be(200);
+            objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(It.IsAny<GetLongestWalkByUserIdQuery>(), default), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetWalksByRegionId_SendsQueryWithRegionIdAndReturnsStatusCode()
+        {
+            // Arrange
+            var regionId = Guid.NewGuid();
+            var query = new GetWalksByRegionIdQuery(RegionId: Guid.Empty, PageNumber: 1, PageSize: 10);
+            var expectedResponse = Result.Success(new List<WalkDto>(), "Success", 200);
+
+            _mockSender.Setup(s => s.Send(It.Is<GetWalksByRegionIdQuery>(q => q.RegionId == regionId), default))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var actionResult = await _controller.GetWalksByRegionId(regionId, query);
+
+            // Assert
+            var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
+            objectResult.StatusCode.Should().Be(200);
+            objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(It.Is<GetWalksByRegionIdQuery>(q => q.RegionId == regionId), default), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetWalksByDifficulty_SendsQueryAndReturnsStatusCode()
+        {
+            // Arrange
+            var query = new GetWalksByDifficultyQuery(Difficulty: DifficultyType.Easy, PageNumber: 1, PageSize: 10);
+            var expectedResponse = Result.Success(new List<WalkDto>(), "Success", 200);
+
+            _mockSender.Setup(s => s.Send(query, default))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var actionResult = await _controller.GetWalksByDifficulty(query);
+
+            // Assert
+            var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
+            objectResult.StatusCode.Should().Be(200);
+            objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(query, default), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateWalk_SendsCommandAndReturnsStatusCode()
+        {
+            // Arrange
+            var command = new CreateWalkCommand("Walk", "Desc", 10.5, "https://example.com/walk.jpg", DifficultyType.Easy, Guid.NewGuid());
+            var expectedResponse = Result.Success(TestDataHelper.CreateWalkDto(name: "Walk"), "Created", 201);
+
+            _mockSender.Setup(s => s.Send(command, default))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var actionResult = await _controller.CreateWalk(command);
 
             // Assert
             var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(201);
             objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(command, default), Times.Once);
         }
 
         [Fact]
-        public async Task UpdateWalk_WhenAuthenticated_PassesAdminFlagAndUserId()
+        public async Task UpdateWalk_SendsCommandWithRouteIdAndReturnsStatusCode()
         {
             // Arrange
             var walkId = Guid.NewGuid();
-            var userId = "admin-user";
-            SetControllerUser(userId, roles: new[] { "Admin" });
+            var command = new UpdateWalkCommand(Guid.Empty, "Updated Walk", "Desc", 12.0, "https://example.com/walk.jpg", DifficultyType.Hard, Guid.NewGuid());
+            var expectedResponse = Result.Success(TestDataHelper.CreateWalkDto(walkId, name: "Updated Walk"), "Updated", 200);
 
-            var updateDto = new UpdateWalkDto
-            {
-                Name = "Updated Walk",
-                Description = "Desc",
-                DifficultyType = DifficultyType.Hard,
-                RegionId = Guid.NewGuid()
-            };
-            var expectedResponse = Result.Success(null, "Updated", 200);
-
-            _mockWalkService.Setup(s => s.UpdateWalkAsync(walkId, updateDto, userId, true))
+            _mockSender.Setup(s => s.Send(It.Is<UpdateWalkCommand>(c => c.Id == walkId && c.Name == "Updated Walk"), default))
                 .ReturnsAsync(expectedResponse);
 
             // Act
-            var actionResult = await _controller.UpdateWalk(walkId, updateDto);
+            var actionResult = await _controller.UpdateWalk(walkId, command);
 
             // Assert
             var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(200);
-            _mockWalkService.Verify(s => s.UpdateWalkAsync(walkId, updateDto, userId, true), Times.Once);
+            objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(It.Is<UpdateWalkCommand>(c => c.Id == walkId), default), Times.Once);
         }
 
         [Fact]
-        public async Task DeleteWalk_WhenAuthenticated_PassesAdminFlagAndUserId()
+        public async Task DeleteWalk_SendsCommandAndReturnsStatusCode()
         {
             // Arrange
             var walkId = Guid.NewGuid();
-            var userId = "writer-user";
-            SetControllerUser(userId, roles: new[] { "Writer" });
-            var expectedResponse = Result.Success(null, "Deleted", 200);
+            var expectedResponse = Result.Success(TestDataHelper.CreateWalkDto(walkId, name: "Deleted Walk"), "Deleted", 200);
 
-            _mockWalkService.Setup(s => s.DeleteWalkAsync(walkId, userId, false))
+            _mockSender.Setup(s => s.Send(It.Is<DeleteWalkCommand>(c => c.Id == walkId), default))
                 .ReturnsAsync(expectedResponse);
 
             // Act
@@ -219,7 +201,8 @@ namespace NZWalks.API.Tests.Controllers
             // Assert
             var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
             objectResult.StatusCode.Should().Be(200);
-            _mockWalkService.Verify(s => s.DeleteWalkAsync(walkId, userId, false), Times.Once);
+            objectResult.Value.Should().BeEquivalentTo(expectedResponse);
+            _mockSender.Verify(s => s.Send(It.Is<DeleteWalkCommand>(c => c.Id == walkId), default), Times.Once);
         }
     }
 }

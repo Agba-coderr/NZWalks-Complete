@@ -2,6 +2,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using NZWalks.Domain.Entities;
 using NZWalks.Application.DTOs;
+using NZWalks.Application.Regions.Commands;
+using NZWalks.Application.Walks.Commands;
 
 namespace NZWalks.Application.Mappings
 {
@@ -11,11 +13,13 @@ namespace NZWalks.Application.Mappings
         {
             //Region Automappings
             CreateMap<Region, RegionDto>().ReverseMap();
-            CreateMap<AddRegionRequestDto, Region>().ReverseMap();
+            CreateMap<CreateRegionCommand, Region>().ReverseMap();
+            CreateMap<UpdateRegionCommand, Region>().ReverseMap();
             CreateMap<UpdateRegionDto, Region>().ReverseMap();
 
             //Walk Automappings
             CreateMap<Walk, WalkDto>().ReverseMap();
+            CreateMap<UpdateWalkCommand, Walk>().ReverseMap();
             CreateMap<AddWalkRequestDto, Walk>().ReverseMap();
             CreateMap<UpdateWalkDto, Walk>().ReverseMap();
 

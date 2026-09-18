@@ -15,10 +15,10 @@ namespace NZWalks.Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<Region> CreateRegionAsync(Region region)
+        public async Task<Region> CreateRegionAsync(Region region, CancellationToken cancellationToken)
         {
-            await _dbContext.Regions.AddAsync(region);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.Regions.AddAsync(region, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return region;
         }
 

@@ -8,7 +8,7 @@ namespace NZWalks.Application.Interfaces.Repositories
 
         Task<Region?> GetRegionByIdAsync(Guid id);
 
-        Task<Region> CreateRegionAsync(Region region);
+        Task<Region> CreateRegionAsync(Region region, CancellationToken cancellationToken);
 
         Task<Region?> UpdateRegionAsync(Guid id, Region region);
 

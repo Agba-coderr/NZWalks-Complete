@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NZWalks.APIs\NZWalks.APIs.csproj" />
     <ProjectReference Include="..\NZWalks.Application\NZWalks.Application.csproj" />
     <ProjectReference Include="..\NZWalks.Domain\NZWalks.Domain.csproj" />
   </ItemGroup>

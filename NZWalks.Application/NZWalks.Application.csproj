@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.2.0" />
     <ProjectReference Include="..\NZWalks.Domain\NZWalks.Domain.csproj" />
 	<PackageReference Include="AutoMapper" Version="13.0.1" />
 	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />

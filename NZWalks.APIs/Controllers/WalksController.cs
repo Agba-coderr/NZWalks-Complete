@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using NZWalks.APIs.CustomActionFilters;
-using NZWalks.Application.DTOs;
-using NZWalks.Domain.Enums;
-using NZWalks.Application.Common;
-using NZWalks.Application.Interfaces.Services;
-using System.Security.Claims;
+using MediatR;
+using NZWalks.Application.Walks.Queries;
+using NZWalks.Application.Walks.Commands;
 
 namespace NZWalks.APIs.Controllers
 {
@@ -14,19 +11,19 @@ namespace NZWalks.APIs.Controllers
     [ApiController]
     public class WalksController : ControllerBase
     {
-        private readonly IWalkService _walkService;
+        private readonly ISender _sender;
 
-        public WalksController(IWalkService walkService)
+        public WalksController(ISender sender)
         {
-            _walkService = walkService;
+            _sender = sender;
         }
 
         [HttpGet]
         [Authorize(Roles = "Reader,Writer,Admin")]
-        public async Task<IActionResult> GetAllWalks([FromQuery] string? filterOn, [FromQuery] string? filterQuery, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllWalks([FromQuery] GetAllWalksQuery query)
         {
             
-            var result = await _walkService.GetAllWalksAsync(filterOn, filterQuery, pageNumber, pageSize);
+            var result = await _sender.Send(query);
 
             return StatusCode(result.Status, result);
         }
@@ -36,7 +33,7 @@ namespace NZWalks.APIs.Controllers
         [Authorize(Roles = "Reader,Writer,Admin")]
         public async Task<IActionResult> GetWalkById([FromRoute] Guid id)
         {
-            var result = await _walkService.GetWalkByIdAsync(id);
+            var result = await _sender.Send(new GetWalkByIdQuery(id));
 
             return StatusCode(result.Status, result);
         }
@@ -44,18 +41,9 @@ namespace NZWalks.APIs.Controllers
         [HttpGet]
         [Route("user")]
         [Authorize(Roles = "Writer,Admin")]
-        public async Task<IActionResult> GetWalksByUserId([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetWalksByUserId([FromQuery] GetWalksByUserIdQuery query)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                var failureResponse = Result.Failure("User is not authenticated", 401);
-                
-                return StatusCode(failureResponse.Status, failureResponse);
-            }
-
-            var result = await _walkService.GetWalksByUserIdAsync(userId, pageNumber, pageSize);
+            var result = await _sender.Send(query);
 
             return StatusCode(result.Status, result);
         }
@@ -65,16 +53,7 @@ namespace NZWalks.APIs.Controllers
         [Authorize(Roles = "Writer,Admin")]
         public async Task<IActionResult> GetLongestWalkByUserId()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                var failureResponse = Result.Failure("User is not authenticated", 401);
-
-                return StatusCode(failureResponse.Status, failureResponse);
-            }
-
-            var result = await _walkService.GetLongestWalkByUserIdAsync(userId);
+            var result = await _sender.Send(new GetLongestWalkByUserIdQuery());
 
             return StatusCode(result.Status, result);
         }
@@ -82,9 +61,9 @@ namespace NZWalks.APIs.Controllers
         [HttpGet]
         [Route("region/{regionId:Guid}")]
         [Authorize(Roles = "Reader,Writer,Admin")]
-        public async Task<IActionResult> GetWalksByRegionId([FromRoute] Guid regionId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetWalksByRegionId([FromRoute] Guid regionId, [FromQuery] GetWalksByRegionIdQuery query)
         {
-            var result = await _walkService.GetWalksByRegionIdAsync(regionId, pageNumber, pageSize);
+            var result = await _sender.Send(query with { RegionId = regionId });
 
             return StatusCode(result.Status, result);
         }
@@ -92,9 +71,9 @@ namespace NZWalks.APIs.Controllers
         [HttpGet]
         [Route("difficulty")]
         [Authorize(Roles = "Reader,Writer,Admin")]
-        public async Task<IActionResult> GetWalksByDifficulty(DifficultyType difficulty, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetWalksByDifficulty([FromQuery] GetWalksByDifficultyQuery query)
         {
-            var result = await _walkService.GetWalksByDifficultyAsync(difficulty, pageNumber, pageSize);
+            var result = await _sender.Send(query);
 
             return StatusCode(result.Status, result);
         }
@@ -102,17 +81,9 @@ namespace NZWalks.APIs.Controllers
         [HttpPost]
         [ValidateModel]
         [Authorize(Roles = "Writer,Admin")]
-        public async Task<IActionResult> CreateWalk([FromBody] AddWalkRequestDto addWalkRequestDto)
+        public async Task<IActionResult> CreateWalk([FromBody] CreateWalkCommand command)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                var failureResponse = Result.Failure("User is not authenticated", 401);
-
-                return StatusCode(failureResponse.Status, failureResponse);
-            }
-            
-            var result = await _walkService.CreateWalkAsync(addWalkRequestDto, userId);
+            var result = await _sender.Send(command);
 
             return StatusCode(result.Status, result);
         }
@@ -121,19 +92,9 @@ namespace NZWalks.APIs.Controllers
         [Route("{id:Guid}")]
         [ValidateModel]
         [Authorize(Roles = "Writer,Admin")]
-        public async Task<IActionResult> UpdateWalk([FromRoute] Guid id, [FromBody] UpdateWalkDto updateWalkDto)
+        public async Task<IActionResult> UpdateWalk([FromRoute] Guid id, [FromBody] UpdateWalkCommand command)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                var failureResponse = Result.Failure("User is not authenticated", 401);
-
-                return StatusCode(failureResponse.Status, failureResponse);
-            }
-
-            var isAdmin = User.IsInRole("Admin");
-
-            var result = await _walkService.UpdateWalkAsync(id, updateWalkDto, userId, isAdmin);
+            var result = await _sender.Send(command with { Id = id });
 
             return StatusCode(result.Status, result);
         }
@@ -143,17 +104,7 @@ namespace NZWalks.APIs.Controllers
         [Authorize(Roles = "Writer,Admin")]
         public async Task<IActionResult> DeleteWalk(Guid id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                var failureResponse = Result.Failure("User is not authenticated", 401);
-
-                return StatusCode(failureResponse.Status, failureResponse);
-            }
-
-            var isAdmin = User.IsInRole("Admin");
-
-            var result = await _walkService.DeleteWalkAsync(id, userId, isAdmin);
+            var result = await _sender.Send(new DeleteWalkCommand(id));
 
             return StatusCode(result.Status, result);
         }

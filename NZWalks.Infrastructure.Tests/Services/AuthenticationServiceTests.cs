@@ -257,7 +257,7 @@ namespace NZWalks.API.Tests.Services
         public async Task VerifyEmailAsync_WhenParametersInvalid_ReturnsBadRequest(string? userId, string? token)
         {
             // Act
-            var result = await _authService.VerifyEmailAsync(userId, token);
+            var result = await _authService.VerifyEmailAsync(userId!, token!);
 
             // Assert
             result.Should().NotBeNull();
@@ -465,7 +465,7 @@ namespace NZWalks.API.Tests.Services
         public async Task ResendVerificationEmailAsync_WhenEmailEmpty_ReturnsBadRequest(string? email)
         {
             // Act
-            var result = await _authService.ResendVerificationEmailAsync(email);
+            var result = await _authService.ResendVerificationEmailAsync(email!);
 
             // Assert
             result.Should().NotBeNull();

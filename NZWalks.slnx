@@ -8,5 +8,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="NZWalks.API.Tests/NZWalks.API.Tests.csproj" />
+    <Project Path="NZWalks.Application.Tests/NZWalks.Application.Tests.csproj" />
+    <Project Path="NZWalks.Infrastructure.Tests/NZWalks.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

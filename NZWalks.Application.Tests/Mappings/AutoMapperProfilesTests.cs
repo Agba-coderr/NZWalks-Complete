@@ -2,9 +2,11 @@ using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using NZWalks.Application.Mappings;
-using NZWalks.Domain.Entities;
 using NZWalks.Application.DTOs;
+using NZWalks.Application.Mappings;
+using NZWalks.Application.Regions.Commands;
+using NZWalks.Application.Walks.Commands;
+using NZWalks.Domain.Entities;
 using NZWalks.Domain.Enums;
 using Xunit;
 
@@ -48,24 +50,37 @@ namespace NZWalks.API.Tests.Mappings
         }
 
         [Fact]
-        public void Map_AddRegionRequestDtoToRegion_MapsCorrectly()
+        public void Map_CreateRegionCommandToRegion_MapsCorrectly()
         {
             // Arrange
-            var addDto = new AddRegionRequestDto
-            {
-                Code = "BOP",
-                Name = "Bay of Plenty",
-                RegionImageUrl = "https://example.com/bop.jpg"
-            };
+            var command = new CreateRegionCommand("AKL", "Auckland", "https://example.com/akl.jpg");
 
             // Act
-            var region = _mapper.Map<Region>(addDto);
+            var region = _mapper.Map<Region>(command);
 
             // Assert
             region.Should().NotBeNull();
-            region.Code.Should().Be(addDto.Code);
-            region.Name.Should().Be(addDto.Name);
-            region.RegionImageUrl.Should().Be(addDto.RegionImageUrl);
+            region.Code.Should().Be(command.Code);
+            region.Name.Should().Be(command.Name);
+            region.RegionImageUrl.Should().Be(command.RegionImageUrl);
+        }
+
+        [Fact]
+        public void Map_UpdateRegionCommandToRegion_MapsCorrectly()
+        {
+            // Arrange
+            var regionId = Guid.NewGuid();
+            var command = new UpdateRegionCommand(regionId, "CHC", "Christchurch", "https://example.com/chc.jpg");
+
+            // Act
+            var region = _mapper.Map<Region>(command);
+
+            // Assert
+            region.Should().NotBeNull();
+            region.Id.Should().Be(regionId);
+            region.Code.Should().Be(command.Code);
+            region.Name.Should().Be(command.Name);
+            region.RegionImageUrl.Should().Be(command.RegionImageUrl);
         }
 
         [Fact]
@@ -129,6 +144,28 @@ namespace NZWalks.API.Tests.Mappings
         }
 
         [Fact]
+        public void Map_UpdateWalkCommandToWalk_MapsCorrectly()
+        {
+            // Arrange
+            var walkId = Guid.NewGuid();
+            var regionId = Guid.NewGuid();
+            var command = new UpdateWalkCommand(walkId, "Updated Walk", "Desc", 15.0, "https://example.com/walk.jpg", DifficultyType.Moderate, regionId);
+
+            // Act
+            var walk = _mapper.Map<Walk>(command);
+
+            // Assert
+            walk.Should().NotBeNull();
+            walk.Id.Should().Be(walkId);
+            walk.Name.Should().Be(command.Name);
+            walk.Description.Should().Be(command.Description);
+            walk.LengthInKm.Should().Be(command.LengthInKm);
+            walk.WalkImageUrl.Should().Be(command.WalkImageUrl);
+            walk.DifficultyType.Should().Be(command.DifficultyType);
+            walk.RegionId.Should().Be(regionId);
+        }
+
+        [Fact]
         public void Map_AddWalkRequestDtoToWalk_MapsCorrectly()
         {
             // Arrange
@@ -159,15 +196,9 @@ namespace NZWalks.API.Tests.Mappings
         public void Map_ImageUploadRequestDtoToImage_MapsComputedProperties()
         {
             // Arrange
-            var mockFile = new Mock<IFormFile>();
-            mockFile.Setup(f => f.FileName).Returns("landscape.PNG");
-            mockFile.Setup(f => f.Length).Returns(2048);
-
-            var stream = new MemoryStream(new byte[2048]);
-
             var uploadDto = new ImageUploadRequestDto
             {
-                FileStream = stream,
+                FileStream = new MemoryStream(new byte[2048]),
                 FileName = "My Landscape Photo.PNG",
                 FileDescription = "Description of photo"
             };

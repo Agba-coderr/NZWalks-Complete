@@ -16,7 +16,6 @@ using NZWalks.Application.Mappings;
 using NZWalks.Application.DTOs;
 using NZWalks.Application.Interfaces.Repositories;
 using NZWalks.Application.Interfaces.Services;
-using NZWalks.Application.Services;
 using Serilog;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -96,11 +95,9 @@ builder.Services.AddScoped<IImageRepository, LocalImageRepository>();
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
-builder.Services.AddScoped<IRegionService, RegionService>();
-
-builder.Services.AddScoped<IWalkService, WalkService>();
-
 builder.Services.AddTransient<IEmailService, EmailService>();
+
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
@@ -150,9 +147,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var result = Result.Failure("Authentication required. Please log in to continue. If you do not have an account, please create one.", StatusCodes.Status401Unauthorized);
 
                 await context.Response.WriteAsJsonAsync(result);
+            },
+
+            OnForbidden = async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/json";
+                var result = Result.Failure("Access denied. You do not have permission to perform this action.", StatusCodes.Status403Forbidden);
+                await context.Response.WriteAsJsonAsync(result);
             }
         };
     });
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(AutoMapperProfiles).Assembly));
 
 var app = builder.Build();
 
